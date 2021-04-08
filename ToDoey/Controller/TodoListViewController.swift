@@ -6,10 +6,12 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
 
     override func viewDidLoad() {
@@ -40,7 +42,7 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "New ToDoey Item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add new item", style: .default) { (action) in
             if let newItem = textField.text {
-                let newItemObj = Item()
+                let newItemObj = Item(context: self.context)
                 newItemObj.title = newItem
                 self.itemArray.append(newItemObj)
                 self.saveDataToFile()
@@ -55,23 +57,19 @@ class TodoListViewController: UITableViewController {
     }
     
     func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error occured while decoding: \(error)")
-            }
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try context.fetch(request)
+        } catch {
+            print("Error fetching data: \(error)")
         }
     }
     
     func saveDataToFile() {
-        let encoder = PropertyListEncoder()
         do {
-            let encodedData = try encoder.encode(self.itemArray)
-            try encodedData.write(to: self.dataFilePath!)
+            try context.save()
         } catch {
-            print("Error occured while encoding: \(error)")
+            print("Error occured while saving context: \(error)")
         }
         self.tableView.reloadData()
     }
