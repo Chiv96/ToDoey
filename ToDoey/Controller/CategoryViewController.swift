@@ -33,6 +33,25 @@ class CategoryViewController: UITableViewController {
     
     //MARK:- Data Manipulation Methods
     
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        let alert = UIAlertController.init(title: "Add ToDoey Category", message: "", preferredStyle: .alert)
+        var textField = UITextField()
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "New Category"
+            textField = alertTextField
+        }
+        let action = UIAlertAction(title: "Add", style: .default) { (action) in
+            if let newCategory = textField.text {
+                let newCategoryObj = Category.init(context: self.context)
+                newCategoryObj.name = newCategory
+                self.categories.append(newCategoryObj)
+                self.saveCategories()
+            }
+        }
+        alert.addAction(action)
+        present(alert, animated: true, completion: nil)
+    }
+    
     func saveCategories() {
         do {
             try context.save()
@@ -54,25 +73,18 @@ class CategoryViewController: UITableViewController {
     
     //MARK:- Table View Delegate Methods
     
-    
-    
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        let alert = UIAlertController.init(title: "Add ToDoey Category", message: "", preferredStyle: .alert)
-        var textField = UITextField()
-        alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "New Category"
-            textField = alertTextField
-        }
-        let action = UIAlertAction(title: "Add", style: .default) { (action) in
-            if let newCategory = textField.text {
-                let newCategoryObj = Category.init(context: self.context)
-                newCategoryObj.name = newCategory
-                self.categories.append(newCategoryObj)
-                self.saveCategories()
-            }
-        }
-        alert.addAction(action)
-        present(alert, animated: true, completion: nil)
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
     }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! TodoListViewController
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categories[indexPath.row]
+        }
+    }
+    
+    
+    
     
 }
